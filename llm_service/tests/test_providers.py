@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.providers.openai_provider import OpenAIProvider
 from app.providers.deepseek_provider import DeepSeekProvider
+from app.providers.anthropic_provider import AnthropicProvider
 from app.providers.local_provider import LocalProvider
 
 
@@ -89,6 +90,39 @@ async def test_deepseek_provider_analyze_function():
         args, kwargs = mock_client_instance.post.call_args
         assert args[0] == provider.api_url
         assert "def add(a, b): return a + b" in kwargs["json"]["messages"][1]["content"]
+
+
+@pytest.mark.asyncio
+async def test_anthropic_provider_analyze_function():
+    """Test the Anthropic provider's analyze_function method."""
+    # Mock the httpx client
+    with patch("app.providers.anthropic_provider.httpx.AsyncClient") as mock_client:
+        # Set up the mock response
+        mock_client_instance = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        mock_response = MagicMock()
+        mock_client_instance.post.return_value = mock_response
+
+        mock_response.raise_for_status = MagicMock()
+        mock_response.json.return_value = {
+            "content": [{"text": "- Add type hints\n- Add docstring\n- Use f-strings"}]
+        }
+
+        # Create the provider and call analyze_function
+        provider = AnthropicProvider()
+        result = await provider.analyze_function("def add(a, b): return a + b")
+
+        # Check the result
+        assert result == ["Add type hints", "Add docstring", "Use f-strings"]
+
+        # Check that the httpx client was called correctly
+        mock_client_instance.post.assert_called_once()
+        args, kwargs = mock_client_instance.post.call_args
+        assert args[0] == provider.api_url
+        assert "def add(a, b): return a + b" in kwargs["json"]["messages"][0]["content"]
+        assert kwargs["headers"]["x-api-key"] == provider.api_key
+        assert kwargs["headers"]["anthropic-version"] == "2023-06-01"
 
 
 @pytest.mark.asyncio

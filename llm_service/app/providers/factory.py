@@ -5,6 +5,7 @@ from typing import Dict, Type
 
 from app.config import LLMProvider, settings
 from app.providers.base import BaseLLMProvider
+from app.providers.anthropic_provider import AnthropicProvider
 from app.providers.deepseek_provider import DeepSeekProvider
 from app.providers.local_provider import LocalProvider
 from app.providers.openai_provider import OpenAIProvider
@@ -18,6 +19,7 @@ class LLMProviderFactory:
     _providers: Dict[LLMProvider, Type[BaseLLMProvider]] = {
         LLMProvider.OPENAI: OpenAIProvider,
         LLMProvider.DEEPSEEK: DeepSeekProvider,
+        LLMProvider.ANTHROPIC: AnthropicProvider,
         LLMProvider.LOCAL: LocalProvider,
     }
 

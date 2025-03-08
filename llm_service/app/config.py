@@ -11,6 +11,7 @@ class LLMProvider(str, Enum):
 
     OPENAI = "openai"
     DEEPSEEK = "deepseek"
+    ANTHROPIC = "anthropic"
     LOCAL = "local"
 
 
@@ -33,6 +34,10 @@ class Settings(BaseSettings):
     # DeepSeek configuration
     DEEPSEEK_API_KEY: Optional[str] = None
     DEEPSEEK_MODEL: str = "deepseek-coder"
+
+    # Anthropic configuration
+    ANTHROPIC_API_KEY: Optional[str] = None
+    ANTHROPIC_MODEL: str = "claude-3-sonnet-20240229"
 
     # Local LLM configuration
     LOCAL_LLM_URL: str = "http://localhost:8000"
