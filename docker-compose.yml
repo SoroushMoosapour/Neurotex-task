@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  local_llm_service:
+    build:
+      context: ./local_llm_service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./local_llm_service:/app
+    environment:
+      - MODEL_PATH=/app/models/qwen-1.5b
+    networks:
+      - code_review_network
+
+  llm_service:
+    build:
+      context: ./llm_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./llm_service:/app
+    environment:
+      - LLM_PROVIDER=local
+      - LOCAL_LLM_URL=http://local_llm_service:8000
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-dummy_key}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-dummy_key}
+    depends_on:
+      - local_llm_service
+    networks:
+      - code_review_network
+
+  code_analysis_service:
+    build:
+      context: ./code_analysis_service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./code_analysis_service:/app
+      - repo_data:/app/repos
+    environment:
+      - LLM_SERVICE_URL=http://llm_service:8001
+    depends_on:
+      - llm_service
+    networks:
+      - code_review_network
+
+volumes:
+  repo_data:
+
+networks:
+  code_review_network:
+    driver: bridge
